@@ -36,7 +36,8 @@ AutomationHelpers.registerWorker('getUserName', function() {
             
             for (var rowIdx = 0; rowIdx < dataRows.length; rowIdx++) {
                 var el = dataRows[rowIdx];
-                 AutomationHelpers.returnValue($(el).find('.label').text(),$(el).find('.uiTooltipText').text());
+                 AutomationHelpers.returnValue($(el).find('.label').text(),$(el).find('select > option[selected="1"]').text());
+                 // AutomationHelpers.returnValue($(el).find('.label').text(),$(el).find('.uiTooltipText').text());
             }
             
             // $.each(dataRows,function(idx,el) {
@@ -90,4 +91,4 @@ AutomationHelpers.registerWorker('getUserName', function() {
     });
 });
 
-AutomationHelpers.runWorker('grabUserPage', "http://www.facebook.com");
+AutomationHelpers.runWorker('grabUserPage', "http://www.facebook.com", true);
