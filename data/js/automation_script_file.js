@@ -12,40 +12,50 @@ AutomationHelpers.registerWorker('grabUserPage', function () {
 
         var facebookInfoURL = $('li.tinyman > a').attr('href').split('?')[0] + '/info';
 
-        AutomationHelpers.runWorker('getUserName', facebookInfoURL, true);
+        AutomationHelpers.runWorker('getUserInfo', facebookInfoURL, true);
     });
 });
 
-AutomationHelpers.registerWorker('getUserName', function() {
+AutomationHelpers.registerWorker('getUserInfo', function() {
     $(document).ready(function() {    
         
         
         // Click every privacy edit button
         AutomationHelpers.simulateClick($('.profileEditButton').get());
         
+		function mapToDataLabel(idx,elem) {
+			return $(elem).attr('data-label');
+		}
+		
         function collectData() {
-            console.log('collectData');
-            var dataRows = $('.dataRow').get(); 
-            if (dataRows.length == 0) {
-                console.log('got 0 datarows, trying again in 500ms');
-                unsafeWindow.clearTimeout(waitForLoad);
-                waitForLoad = unsafeWindow.setTimeout(collectData,500);
-                return;
-            }
-            console.log('got ' + dataRows.length + ' datarows');
+            var contactElems = $('#edit_contact_info').find('.checked');
+			contacts = contactElems.map(mapToDataLabel);
+			for (var contactX = 0; contactX < contacts.length; contactX++) {
+				var contactName = $(contactElems[contactX]).parents('tr').find('td.data').text();
+				
+				// Limit to e-mail addresses
+				if (contactName.indexOf('@') != -1)
+    				AutomationHelpers.returnValue('Contact: ' + contactName,contacts[contactX]);	
+			}
             
-            for (var rowIdx = 0; rowIdx < dataRows.length; rowIdx++) {
-                var el = dataRows[rowIdx];
-                 AutomationHelpers.returnValue($(el).find('.label').text(),$(el).find('select > option[selected="1"]').text());
-                 // AutomationHelpers.returnValue($(el).find('.label').text(),$(el).find('.uiTooltipText').text());
-            }
-            
-            // $.each(dataRows,function(idx,el) {
-            //      console.log('in loop');
-            //      console.log("key: " + $(el).find('.label').text() + " value: " + $(el).find('.uiTooltipText').text());
-            //      AutomationHelpers.returnValue($(el).find('.label').text(),$(el).find('.uiTooltipText').text());
-            // 
-            // });
+			var eduWork = $('#pagelet_edit_eduwork').find('.checked');
+			eduWork = eduWork.map(mapToDataLabel);
+			AutomationHelpers.returnValue('Work',eduWork[0]);
+			AutomationHelpers.returnValue('Higher Education',eduWork[1]);
+			AutomationHelpers.returnValue('Secondary Education',eduWork[2]);
+			
+			var hometownLocation = $('#edit_hometown').find('.checked');
+			hometownLocation = hometownLocation.map(mapToDataLabel);
+			AutomationHelpers.returnValue('Hometown',hometownLocation[0]);
+			AutomationHelpers.returnValue('Current Location',hometownLocation[1]);
+			
+			var relationshipStatus = $('#edit_relationship_info').find('.checked')[0];
+			AutomationHelpers.returnValue('Relationship status',$(relationshipStatus).attr('data-label'));
+			
+
+			
+			var quotesSelector = $('[data-contextselector="#pagelet_quotes .uiHeader"]').find('.checked').get()[0];
+			AutomationHelpers.returnValue('Favorite quotes',$(quotesSelector).attr('data-label'));				
         }
         
         // Wait for half a second after the last object loads.
@@ -55,39 +65,10 @@ AutomationHelpers.registerWorker('getUserName', function() {
         $('#timeline_tab_content').bind('DOMSubtreeModified.watchdog', function() {
             console.log('DOM update, newtimeout');
             unsafeWindow.clearTimeout(waitForLoad);
-            waitForLoad = unsafeWindow.setTimeout(collectData,1500);
+            waitForLoad = unsafeWindow.setTimeout(collectData,3000);
             
             $('#timeline_tab_content').unbind('DOMSubtreeModified.watchdog');
         });
-        // 
-        // 
-        // 
-        // var pagelets = [
-        //     {
-        //         id: 'eduwork',
-        //         name: 'Education and Work',
-        //         pagelet_selector: '#pagelet_eduwork'
-        //     },
-        //     {
-        //         id: 'hometown',
-        //         name: 'Hometown',
-        //         pagelet_selector: '#pagelet_hometown'
-        //     }
-        // ];
-        // 
-        // for (var pagelet in pagelets) {
-        //     $(pagelets[pagelet].pagelet_selector).bind('DOMSubtreeModified.watchdog', function() {
-        // 
-        //         var retval = $(this.pagelet_selector).find('.uiMenuItem').attr('data-label');
-        //         if (!retval) return;
-        //         AutomationHelpers.returnValue(this.name, retval);
-        //         $(this.pagelet_selector).unbind('DOMSubtreeModified.watchdog');
-        //     }.bind(pagelets[pagelet]));
-        //  
-        //  
-        //     AutomationHelpers.simulateClick($(pagelets[pagelet].pagelet_selector).find('.profileEditButton').get());       
-        // }
-        // 
     });
 });
 
