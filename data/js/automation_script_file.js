@@ -12,8 +12,65 @@ AutomationHelpers.registerWorker('grabUserPage', function () {
 
         var facebookInfoURL = $('li.tinyman > a').attr('href').split('?')[0] + '/info';
 
+		AutomationHelpers.runWorker('getPrivacySettings', "http://www.facebook.com/settings/?tab=privacy", true);
         AutomationHelpers.runWorker('getUserInfo', facebookInfoURL, true);
     });
+});
+
+AutomationHelpers.registerWorker('getPrivacySettings', function() {
+	// http://www.facebook.com/settings/?tab=privacy
+	$(document).ready(function() {
+		// Default share privacy?
+		AutomationHelpers.returnValue("Default Privacy",$('.selectedButton').text());
+		
+		
+		// Pane links 1 and 2 go to relevant panes. The 3rd is the mass "limit audience for past posts" functionality.
+		var editSettingsPanes = $('.fbPrivacyIndexPageItem a[rel="dialog"]');
+		
+		AutomationHelpers.simulateClick(editSettingsPanes[0]);
+		
+		// Wait for dialog
+		firstSettingTimer = setInterval(function() {
+			// TODO: timeout when this doesn't work after enough times
+			if ($('.pop_dialog .uiButtonText:visible').length == 5) {
+				console.log('.pop_dialog:visible');
+				clearInterval(firstSettingTimer);
+				
+				var settingsOnDialog1 = $('.pop_dialog .uiButtonText:visible').get();
+				console.log(settingsOnDialog1);
+				console.log(JSON.stringify(settingsOnDialog1));
+				const settingsTable = [
+					"Who can find you",
+					"Who can send friend requests",
+					"Who can send inbox messages",
+					"Who can post on your timeline",
+					"Who can see posts by others"
+				];
+				for (var setting in settingsTable) {
+					AutomationHelpers.returnValue(settingsTable[setting],settingsOnDialog1[setting].textContent);
+				}
+				
+				openSecondSettingsPane();
+			}
+		}, 500);
+		
+		function openSecondSettingsPane() {
+			AutomationHelpers.simulateClick(editSettingsPanes[1]);
+			
+			// Wait for dialog to change
+			var secondSettingTimer = setInterval(function() {
+				if ($('.pop_dialog .prs').length == 5) {
+					clearInterval(secondSettingTimer);
+					AutomationHelpers.returnValue("Timeline Review", $('#profile_review_setting').text());
+					AutomationHelpers.returnValue("Tag Review", $('#tag_review_setting').text());
+					AutomationHelpers.returnValue("Maximum timeline visibility", $('.pop_dialog .uiButtonText:visible').text());
+					AutomationHelpers.returnValue("Tag Suggestions", $('#tag_suggestion_setting').text());
+					AutomationHelpers.returnValue("Friends can check you in", $('#checkin_tags_setting').text());
+				}
+			});
+		}
+		
+	});
 });
 
 AutomationHelpers.registerWorker('getUserInfo', function() {
