@@ -23,7 +23,6 @@ AutomationHelpers.registerWorker('getPrivacySettings', function() {
 		// Default share privacy?
 		AutomationHelpers.returnValue("Default Privacy",$('.selectedButton').text());
 		
-		
 		// Pane links 1 and 2 go to relevant panes. The 3rd is the mass "limit audience for past posts" functionality.
 		var editSettingsPanes = $('.fbPrivacyIndexPageItem a[rel="dialog"]');
 		
@@ -72,6 +71,29 @@ AutomationHelpers.registerWorker('getPrivacySettings', function() {
 		
 	});
 });
+
+AutomationHelpers.registerWorker('setPrivacySettings', function() {
+	AutomationHelpers.forSetting("Who can find you", function (val) {
+		// Pane links 1 and 2 go to relevant panes. The 3rd is the mass "limit audience for past posts" functionality.
+		var editSettingsPanes = $('.fbPrivacyIndexPageItem a[rel="dialog"]');
+		
+		AutomationHelpers.simulateClick(editSettingsPanes[0]);
+		
+		AutomationHelpers.pollUntilTrue(function() {
+			return $('.pop_dialog .uiSelectorButton:visible').length > 0;
+		}, function() {
+			AutomationHelpers.simulateClick($('.pop_dialog .uiSelectorButton').get()[0]);
+		
+			AutomationHelpers.pollUntilTrue(function() {
+				return $('.pop_dialog .fbPrivacyAudienceSelectorOption:visible').length > 0;
+			}, function() {
+				var elemToClick = $('.pop_dialog .fbPrivacyAudienceSelectorOption[data-label="' + val + '"]:visible').get();
+				AutomationHelpers.simulateClick(elemToClick);
+			});	
+		});
+	});	
+});
+
 
 AutomationHelpers.registerWorker('getUserInfo', function() {
     $(document).ready(function() {    
@@ -129,4 +151,6 @@ AutomationHelpers.registerWorker('getUserInfo', function() {
     });
 });
 
-AutomationHelpers.runWorker('grabUserPage', "http://www.facebook.com", true);
+AutomationHelpers.runWorker('setPrivacySettings', "http://www.facebook.com/settings/?tab=privacy", true);
+
+// AutomationHelpers.runWorker('grabUserPage', "http://www.facebook.com", true);

@@ -1,8 +1,64 @@
 AutomationHelpers = function() {
-
+	var callbackDict = {};
+	
+	self.port.on("fetch_setting_callback", function(msg) {
+		getAndRmCallback(msg.callback_id)(msg.value);
+	});
+	
+	function saveCallback(callback) {
+		// Gen random UUID to associate with this callback
+		const randUUID = uuid.v4();
+		callbackDict[randUUID] = callback;
+		return randUUID;
+	}
+	
+	function getAndRmCallback(callbackID) {
+		var callback = callbackDict[callbackID];
+		delete callbackDict[callbackID];
+		return callback;
+	}
+	
+	// TODO
+	function callAndRmCallback(callbackID) {
+		var callbackFunc = getAndRmCallback(callbackID);
+		// callbackFunc.apply({},)
+	}
+	
     return {
             openNewTab: function(url) {
             },
+			// Call a function at an interval until it returns something truthy or after maxTries attempts.
+			pollUntilTrue: function(pollFunc,successCallback,pollInterval,maxTries,failureCallback) {
+				// Poll by .5 sec by default
+				if (!pollInterval)
+					pollInterval = 500;
+				if (!maxTries)
+					maxTries = 50;
+				var tries = 0;
+				var pollID = setInterval(function() {
+					if (pollFunc()) {
+						clearInterval(pollID);
+						if (successCallback)
+							successCallback();
+						return;
+					}
+					maxTries++;
+					if (tries >= maxTries) {
+						clearInterval(pollID);
+						if (failureCallback)
+							failureCallback();
+					}
+				}, pollInterval);
+			},
+			forSetting: function(setting,callback) {
+
+				// TODO: self.port.emit?
+				self.postMessage({
+					type: 'fetch_setting',
+					setting_name: setting,
+					callback_id: saveCallback(callback)
+				});
+			},
             registerWorker: function(id, func) {
                 self.postMessage({
                     type: 'register_worker',
