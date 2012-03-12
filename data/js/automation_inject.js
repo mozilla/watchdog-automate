@@ -27,7 +27,7 @@ function automate() {
                     return function() {
                         $(selector).unbind('DOMSubtreeModified.watchdogautomator');   
                         if (ntimes == 1) {
-                            console.log('dom tree modified enough times');
+                            // console.log('dom tree modified enough times');
                             doNextScriptStep();
                              $(selector).unbind('DOMSubtreeModified.watchdogautomator');   
                         } 
@@ -45,7 +45,7 @@ function automate() {
     
     function runScript(script) {        
         if (script.timeout) {
-            console.log('timeout ' + script.timeout);
+            // console.log('timeout ' + script.timeout);
             setTimeout(function() {
                 delete script['timeout'];
                 runScript(script);
@@ -72,8 +72,7 @@ function automate() {
                     urlToAssert = eval(script.code);
                 
                 if (unsafeWindow.location != urlToAssert) {
-                    unsafeWindow.location = urlToAssert;   
-                    console.log ("setting location to  " + urlToAssert);
+                    unsafeWindow.location = urlToAssert;
                 }
                 else {
                     // FIXME: If the assertion succeeds, we need to manually advance the script step. Should clean this up.
@@ -85,7 +84,7 @@ function automate() {
                 break;
 
             case 'simulate_click':                
-                console.log("simulating click on selector: " + script.target + " at " + (new Date()));
+                // console.log("simulating click on selector: " + script.target + " at " + (new Date()));
                 var targetElems = eval(script.target).get();
                 
                 for (var elem in targetElems) {

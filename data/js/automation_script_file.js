@@ -1,9 +1,7 @@
 AutomationHelpers.registerWorker('grabUserPage', function () {
     $(document).ready(function() {    
         if ($('.UIPage_LoggedOut').length > 0) {
-            self.postMessage({
-                error: 'Not logged in!'
-            });
+			AutomationHelpers.registerError('Not logged in to Facebook!');
             return;
         }
         
@@ -12,8 +10,9 @@ AutomationHelpers.registerWorker('grabUserPage', function () {
 
         var facebookInfoURL = $('li.tinyman > a').attr('href').split('?')[0] + '/info';
 
-		AutomationHelpers.runWorker('getPrivacySettings', "http://www.facebook.com/settings/?tab=privacy", true);
-        AutomationHelpers.runWorker('getUserInfo', facebookInfoURL, true);
+		AutomationHelpers.runWorker('getPrivacySettings', "http://www.facebook.com/settings/?tab=privacy");
+        AutomationHelpers.runWorker('getUserInfo', facebookInfoURL);
+		AutomationHelpers.finishAutomation('grabUserPage');
     });
 });
 
@@ -32,12 +31,10 @@ AutomationHelpers.registerWorker('getPrivacySettings', function() {
 		firstSettingTimer = setInterval(function() {
 			// TODO: timeout when this doesn't work after enough times
 			if ($('.pop_dialog .uiButtonText:visible').length == 5) {
-				console.log('.pop_dialog:visible');
 				clearInterval(firstSettingTimer);
 				
 				var settingsOnDialog1 = $('.pop_dialog .uiButtonText:visible').get();
-				console.log(settingsOnDialog1);
-				console.log(JSON.stringify(settingsOnDialog1));
+
 				const settingsTable = [
 					"Who can find you",
 					"Who can send friend requests",
@@ -65,6 +62,7 @@ AutomationHelpers.registerWorker('getPrivacySettings', function() {
 					AutomationHelpers.returnValue("Maximum timeline visibility", $('.pop_dialog .uiButtonText:visible').text());
 					AutomationHelpers.returnValue("Tag Suggestions", $('#tag_suggestion_setting').text());
 					AutomationHelpers.returnValue("Friends can check you in", $('#checkin_tags_setting').text());
+					AutomationHelpers.finishAutomation('getPrivacySettings');
 				}
 			});
 		}
@@ -96,9 +94,14 @@ AutomationHelpers.registerWorker('setPrivacySettings', function() {
 
 
 AutomationHelpers.registerWorker('getUserInfo', function() {
-    $(document).ready(function() {    
-        
-        
+    $(document).ready(function() {
+		// Check if the user has timeline
+		if ($('.fbTimelineViewingSelf').length == 0) {
+			AutomationHelpers.registerError("You don't have Facebook's timeline profile. We can grab privacy settings, but not userinfo. :(");
+			AutomationHelpers.finishAutomation('getUserInfo');
+			return;	
+		}
+		
         // Click every privacy edit button
         AutomationHelpers.simulateClick($('.profileEditButton').get());
         
@@ -107,6 +110,7 @@ AutomationHelpers.registerWorker('getUserInfo', function() {
 		}
 		
         function collectData() {
+
             var contactElems = $('#edit_contact_info').find('.checked');
 			contacts = contactElems.map(mapToDataLabel);
 			for (var contactX = 0; contactX < contacts.length; contactX++) {
@@ -130,19 +134,17 @@ AutomationHelpers.registerWorker('getUserInfo', function() {
 			
 			var relationshipStatus = $('#edit_relationship_info').find('.checked')[0];
 			AutomationHelpers.returnValue('Relationship status',$(relationshipStatus).attr('data-label'));
-			
 
-			
 			var quotesSelector = $('[data-contextselector="#pagelet_quotes .uiHeader"]').find('.checked').get()[0];
-			AutomationHelpers.returnValue('Favorite quotes',$(quotesSelector).attr('data-label'));				
+			AutomationHelpers.returnValue('Favorite quotes',$(quotesSelector).attr('data-label'));
+			
+			AutomationHelpers.finishAutomation('getUserInfo');
         }
         
-        // Wait for half a second after the last object loads.
-        
+        // Wait for half a second after the last object loads.        
         var waitForLoad = null;
         
         $('#timeline_tab_content').bind('DOMSubtreeModified.watchdog', function() {
-            console.log('DOM update, newtimeout');
             unsafeWindow.clearTimeout(waitForLoad);
             waitForLoad = unsafeWindow.setTimeout(collectData,3000);
             
@@ -151,6 +153,6 @@ AutomationHelpers.registerWorker('getUserInfo', function() {
     });
 });
 
-AutomationHelpers.runWorker('setPrivacySettings', "http://www.facebook.com/settings/?tab=privacy", true);
+// AutomationHelpers.runWorker('setPrivacySettings', "http://www.facebook.com/settings/?tab=privacy", true);
 
-// AutomationHelpers.runWorker('grabUserPage', "http://www.facebook.com", true);
+AutomationHelpers.runWorker('grabUserPage', "http://www.facebook.com");

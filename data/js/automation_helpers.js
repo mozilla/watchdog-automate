@@ -59,6 +59,18 @@ AutomationHelpers = function() {
 					callback_id: saveCallback(callback)
 				});
 			},
+			finishAutomation: function(workerID) {
+				self.postMessage({
+					type: 'finish_automation',
+					worker_id: workerID
+				});
+			},
+			registerError: function(error) {
+				self.postMessage({
+					type: 'raise_error',
+					error: error
+				});
+			},
             registerWorker: function(id, func) {
                 self.postMessage({
                     type: 'register_worker',
@@ -88,6 +100,7 @@ AutomationHelpers = function() {
                     });
             },
             simulateClick: function(elements) {
+				if (!elements) return;
                 if (!elements.length) elements = [elements];
                 for (var elemIdx = 0; elemIdx < elements.length; elemIdx++) {
                     var evt = window.document.createEvent('MouseEvents');

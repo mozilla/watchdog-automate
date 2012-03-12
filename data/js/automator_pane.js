@@ -9,7 +9,5 @@ $(document).ready(function() {
         newDiv.css('display','block');
         
         $('#privacyProperties').append(newDiv);
-        
-        console.log("Pane name : " + msg.property + " pane value: " + msg.value);
     });
 });
