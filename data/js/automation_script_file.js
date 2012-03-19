@@ -30,17 +30,16 @@ AutomationHelpers.registerWorker('getPrivacySettings', function() {
 		// Wait for dialog
 		firstSettingTimer = setInterval(function() {
 			// TODO: timeout when this doesn't work after enough times
-			if ($('.pop_dialog .uiButtonText:visible').length == 5) {
+			if ($('.pop_dialog .uiButtonText:visible').length == 4) {
 				clearInterval(firstSettingTimer);
 				
 				var settingsOnDialog1 = $('.pop_dialog .uiButtonText:visible').get();
 
 				const settingsTable = [
-					"Who can find you",
+					"Who can look up your timeline by name",
+					"Who can look you up by e-mail address and phone number",
 					"Who can send friend requests",
-					"Who can send inbox messages",
-					"Who can post on your timeline",
-					"Who can see posts by others"
+					"Who can send you Facebook messages"
 				];
 				for (var setting in settingsTable) {
 					AutomationHelpers.returnValue(settingsTable[setting],settingsOnDialog1[setting].textContent);
@@ -55,13 +54,17 @@ AutomationHelpers.registerWorker('getPrivacySettings', function() {
 			
 			// Wait for dialog to change
 			var secondSettingTimer = setInterval(function() {
-				if ($('.pop_dialog .prs').length == 5) {
+				if ($('.pop_dialog .prs').length == 7) {
 					clearInterval(secondSettingTimer);
 					AutomationHelpers.returnValue("Timeline Review", $('#profile_review_setting').text());
 					AutomationHelpers.returnValue("Tag Review", $('#tag_review_setting').text());
-					AutomationHelpers.returnValue("Maximum timeline visibility", $('.pop_dialog .uiButtonText:visible').text());
 					AutomationHelpers.returnValue("Tag Suggestions", $('#tag_suggestion_setting').text());
 					AutomationHelpers.returnValue("Friends can check you in", $('#checkin_tags_setting').text());
+
+					AutomationHelpers.returnValue("Who can post on your timeline", $('.fbPrivacyTagDialogItemTitle:eq(0)').parent().find('.uiButtonText').text());
+					AutomationHelpers.returnValue("Who can see what others post on your timeline", $('.fbPrivacyTagDialogItemTitle:eq(1)').parent().find('.uiButtonText').text());
+					AutomationHelpers.returnValue("Who can see posts that appear on your timeline because you've been tagged?", $('.fbPrivacyTagDialogItemTitle:eq(2)').parent().find('.uiButtonText').text());
+					
 					AutomationHelpers.finishAutomation('getPrivacySettings');
 				}
 			});
